@@ -21,7 +21,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: 'dist',
+    outDir: 'extension/side-panel',
     rollupOptions: {
       output: {
         sanitizeFileName(name) {
