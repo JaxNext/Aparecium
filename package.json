@@ -5,11 +5,13 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "dev": "vite build --watch",
+    "dev": "vite",
+    "dev-ext": "vite build --watch",
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@rejax/browser-ai": "^0.0.5",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "lucide-vue-next": "^0.453.0",
@@ -28,5 +30,6 @@
     "typescript": "^5.5.3",
     "vite": "^5.4.8",
     "vue-tsc": "^2.1.6"
-  }
+  },
+  "license": "MIT"
 }

@@ -1,15 +1,22 @@
 {
-  "name": "Aparecium",
+  "name": "Apa",
   "version": "1.0",
   "manifest_version": 3,
-  "description": "Aparecium is a browser extension that can reveal hidden information behind a word, a phrase, or a sentence. Just like the charm in Harry Potter!",
+  "description": "Apa can reveal hidden information behind a word, or a phrase, Just like the charm 'Aparecium' in Harry Potter!",
   "background": {
     "service_worker": "background.js"
   },
   "side_panel": {
     "default_path": "side-panel/index.html"
   },
-  "permissions": ["sidePanel"],
+  "permissions": [
+    "sidePanel",
+    "scripting",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
   "action": {
     "default_icon": {
       "16": "images/icon16.png",
