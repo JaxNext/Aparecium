@@ -35,6 +35,25 @@ Aparecium is a browser extension that can explain words, phrases, or sentences, 
 2. Highlight any text on a webpage, the selected text will be catch by Aparecium automatically.
 3. Now you can see the explanation of the selected text in the side panel.
 
+## Roadmap
+
+- ✅ Basic explanation.
+- ✅ Support manually input text into a textarea.
+- ✅ Clear button for input text.
+- ✅ Copy button for output text.
+- [ ] Abortion.
+- [ ] Usability detection in detail level.
+- [ ] Detail level.
+- [ ] Output as plain text, markdown, or html.
+- [ ] Structured output.
+- [ ] Translate input text into English in case LLM can't understand.
+- [ ] Translate output text into multiple languages.
+- [ ] Share input and output text as an image.
+- [ ] History list.
+- [ ] Remember settings.
+- [ ] Rate the explanation. (Valuable?)
+- [ ] Pronunciation and TTS. (?)
+
 ## Development
 
 ### Prerequisites
