@@ -2,46 +2,93 @@
 import { onMounted, ref, watch } from 'vue'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
-import { genSession } from '@rejax/browser-ai'
+import {
+  genSession,
+  checkTranslatorUsability,
+  genTranslator,
+} from '@rejax/browser-ai'
 import {
   Trash2,
   Copy,
   CopyCheck,
   LoaderPinwheel,
   RefreshCcw,
+  Languages,
+  Ruler,
 } from 'lucide-vue-next'
 import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { useClipboard } from '@vueuse/core'
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  useClipboard,
+  useStorage,
+} from '@vueuse/core'
 import { marked } from 'marked'
 /// <reference types="chrome"/>
 
 const { copy } = useClipboard()
 
-const prompts = {
-  'children': `You are a friendly teacher who loves to help children learn new words and understand sentences. Use simple language and fun examples. When a child asks about a word or sentence, explain it using simple terms, relatable examples, and engaging analogies. For example, if asked, 'What does 'happy' mean?', you might say: 'Happy means feeling good inside, like when you get your favorite toy!' After explaining, ask the child if they have any questions or if they want to know about another word. Avoid using complex vocabulary or adult concepts.`,
-  normal: `You are a language expert who can explain any sentence in a way that is easy to understand. When a user gives you a word or sentence, explain it using simple terms, relatable examples, and engaging analogies. For example, if given, 'cat', you might say: 'A cat is a kind of animal, has one head and four legs………… If you don't understand the given content, you tell the user you don't know and give them some suggestions to find the answer. Must output in markdown format. As short as possible and make sure less than 200 words.`,
-}
-const initialPrompts = [
-  {
-    role: 'system',
-    content: prompts.normal,
-  },
-]
 const session = ref<Session | null>(null)
-const abortController = ref<AbortController | null>(null)
+const explainController = ref<AbortController | null>(null)
+const translateController = ref<AbortController | null>(null)
 const selectedText = ref('')
 const explaination = ref('')
 const parsedExplaination = ref('')
 const copied = ref(false)
 const explaining = ref(false)
+const storage = useStorage('aparecium-settings', {
+  translateTo: 'en',
+  len: 200,
+})
+const canTranslate = ref(false)
+const translateTo = ref(storage.value.translateTo)
+const langList = [
+  {
+    label: 'English',
+    value: 'en',
+  },
+  {
+    label: '中文',
+    value: 'zh',
+  },
+]
+const translating = ref(false)
+const translator = ref<Translator | null>(null)
+const translatedExplaination = ref('')
+const length = ref(storage.value.len)
+const lengthList = [
+  {
+    label: 'Short',
+    value: 50,
+  },
+  {
+    label: 'Medium',
+    value: 100,
+  },
+  {
+    label: 'Long',
+    value: 200,
+  },
+]
+
+function genInitialPrompts() {
+  const prompts = {
+    'children': `You are a friendly teacher who loves to help children learn new words and understand sentences. Use simple language and fun examples. When a child asks about a word or sentence, explain it using simple terms, relatable examples, and engaging analogies. For example, if asked, 'What does 'happy' mean?', you might say: 'Happy means feeling good inside, like when you get your favorite toy!' After explaining, ask the child if they have any questions or if they want to know about another word. Avoid using complex vocabulary or adult concepts.`,
+    normal: `You are a language expert who can explain any sentence in a way that is easy to understand. When a user gives you a word or sentence, explain it using simple terms, relatable examples, and engaging analogies. For example, if given, 'cat', you might say: 'A cat is a kind of animal, has one head and four legs………… If you don't understand the given content, you tell the user you don't know and give them some suggestions to find the answer. Must output in markdown format. As short as possible and make sure less than ${length.value} words.`,
+  }
+  const initialPrompts = [
+    {
+      role: 'system',
+      content: prompts.normal,
+    },
+  ]
+  return initialPrompts
+}
 
 let debounceTimer: NodeJS.Timeout
 
@@ -52,8 +99,8 @@ watch(selectedText, (newText) => {
   
   debounceTimer = setTimeout(() => {
     if (newText && session.value) {
-      abortController.value = new AbortController()
-      explain(abortController.value.signal)
+      explainController.value = new AbortController()
+      explain(explainController.value.signal)
     }
   }, 800)
 })
@@ -69,14 +116,27 @@ async function explain(signal: AbortSignal) {
     parsedExplaination.value = marked(chunk)
   }
   explaining.value = false
+  await translate()
 }
-
-function abort() {
-  if (abortController.value) {
-    abortController.value.abort()
+function abort () {
+  abortExplain()
+  abortTranslate()
+}
+function abortExplain() {
+  if (explainController.value) {
+    explainController.value.abort()
   }
   explaination.value = ''
   parsedExplaination.value = ''
+  explaining.value = false
+}
+
+function abortTranslate() {
+  if (translateController.value) {
+    translateController.value.abort()
+  }
+  translatedExplaination.value = ''
+  translating.value = false
 }
 
 async function clearInput() {
@@ -93,23 +153,71 @@ async function copyExplaination() {
 
 async function redo() {
   await abort()
-  abortController.value = new AbortController()
-  explain(abortController.value.signal)
+  explainController.value = new AbortController()
+  explain(explainController.value.signal)
+}
+
+async function changeLang(lang: string) {
+  translateTo.value = lang
+  storage.value.translateTo = lang
+  if (parsedExplaination.value) {
+    translator.value = null
+    await translate()
+  }
+}
+
+async function translate() {
+  if (!canTranslate.value || translateTo.value === 'en') {
+    translatedExplaination.value = parsedExplaination.value
+    return
+  }
+  translating.value = true
+  if (!translator.value) {
+    translator.value = await genTranslator({
+      sourceLanguage: 'en',
+      targetLanguage: translateTo.value,
+    })
+  }
+  translateController.value = new AbortController()
+  translatedExplaination.value = await translator.value.translate(parsedExplaination.value, {
+    signal: translateController.value.signal,
+  })
+  translating.value = false
+}
+
+async function changeLength(len: number) {
+  length.value = len
+  storage.value.len = len
+  session.value = await genSession({
+    initialPrompts: genInitialPrompts(),
+  })
+  if (selectedText.value) {
+    abort()
+    explainController.value = new AbortController()
+    explain(explainController.value.signal)
+  }
 }
 
 onMounted(async () => {
   // Listen for messages from the background script
   if (!chrome?.runtime) return
-
-  session.value = await genSession({
-    initialPrompts,
-  })
+  console.log('onMounted', storage.value.len, typeof storage.value.len)
 
   chrome.runtime.onMessage.addListener((message) => {
     if (message.type === 'textSelected') {
       selectedText.value = message.text
     }
   })
+
+  session.value = await genSession({
+    initialPrompts: genInitialPrompts(),
+  })
+
+  canTranslate.value = (await checkTranslatorUsability({
+    sourceLanguage: 'en',
+    targetLanguage: 'zh',
+  }))?.available ?? false
+
 })
 </script>
 
@@ -141,8 +249,9 @@ onMounted(async () => {
   <!-- Explaination -->
   <div class="title-row flex items-center mb-4">
     <div class="sub-title text-lg font-bold dark:text-white">Explaination</div>
-    <div v-if="explaining" class="loading-box ml-[6px]">
+    <div v-if="explaining || translating" class="loading-box ml-[6px] flex items-center">
       <LoaderPinwheel class="w-[14px] h-[14px] text-gray-400 animate-spin" />
+      <div class="status text-xs text-gray-500 ml-1">{{ explaining ? 'Explaining' : 'Translating' }}</div>
     </div>
     <div class="btn-box ml-auto">
       <Button
@@ -155,19 +264,56 @@ onMounted(async () => {
       >
         <RefreshCcw class="w-[14px] h-[14px] text-gray-400" />
       </Button>
-      <!-- <Select>
-        <SelectTrigger>
-          <SelectValue placeholder="Select a fruit" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            <SelectLabel>Fruits</SelectLabel>
-            <SelectItem value="apple">
-              Apple
-            </SelectItem>
-          </SelectGroup>
-        </SelectContent>
-      </Select> -->
+      <DropdownMenu v-if="canTranslate && explaination && !explaining">
+        <DropdownMenuTrigger as-child>
+          <Button
+            class="mr-2"
+            variant="outline"
+            size="icon"
+            title="Translate"
+          >
+            <Languages class="w-[14px] h-[14px] text-gray-400" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent class="w-28">
+          <DropdownMenuLabel>Translate to</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuCheckboxItem
+            v-for="lang in langList"
+            :key="lang.value"
+            :value="lang.value"
+            :checked="translateTo === lang.value"
+            @click="changeLang(lang.value)"
+          >
+            {{ lang.label }}
+          </DropdownMenuCheckboxItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <DropdownMenu v-if="explaination && !explaining">
+        <DropdownMenuTrigger as-child>
+          <Button
+            class="mr-2"
+            variant="outline"
+            size="icon"
+            title="Length"
+          >
+            <Ruler class="w-[14px] h-[14px] text-gray-400" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent class="w-28">
+          <DropdownMenuLabel>Length</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuCheckboxItem
+            v-for="len in lengthList"
+            :key="len.value"
+            :value="len.value"
+            :checked="len.value === length"
+            @click="changeLength(len.value)"
+          >
+            {{ len.label }}
+          </DropdownMenuCheckboxItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
       <Button
         v-if="explaination && !explaining"
         class=""
@@ -182,11 +328,17 @@ onMounted(async () => {
       </Button>
     </div>
   </div>
-  <div class="explaination pretty-scrollbar text-lg dark:text-white h-[calc(100vh-325px)] whitespace-pre-line overflow-y-auto pr-[18px] leading-normal border border-gray-200 rounded-md dark:border-gray-800 p-2" v-html="parsedExplaination"></div>
+  <div
+    v-if="parsedExplaination && !translatedExplaination"
+    class="explaination pretty-scrollbar text-lg dark:text-white h-[calc(100vh-325px)] whitespace-pre-line overflow-y-auto pr-[18px] leading-normal border border-gray-200 rounded-md dark:border-gray-800 p-2"
+    v-html="parsedExplaination"></div>
+  <div
+    v-if="translatedExplaination"
+    class="explaination pretty-scrollbar text-lg dark:text-white h-[calc(100vh-325px)] whitespace-pre-line overflow-y-auto pr-[18px] leading-normal border border-gray-200 rounded-md dark:border-gray-800 p-2"
+    v-html="translatedExplaination"></div>
 </template>
 
 <style scoped>
-
 .pretty-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
