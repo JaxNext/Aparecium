@@ -2,8 +2,7 @@
 import { onMounted, ref, watch } from 'vue'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
-import { promptStreaming, genSession } from '@rejax/browser-ai'
-import { marked } from 'marked'
+import { genSession } from '@rejax/browser-ai'
 import { CircleX, Copy } from 'lucide-vue-next'
 import { useClipboard } from '@vueuse/core'
 
@@ -20,47 +19,53 @@ const initialPrompts = [
   },
 ]
 const session = ref(null)
-// const abortController = new AbortController()
+const abortController = ref(null)
 const selectedText = ref('')
 const explaination = ref('')
 
-// Add debounced watcher
 let debounceTimer: NodeJS.Timeout
 
 watch(selectedText, (newText) => {
-  if (!newText) {
-    explaination.value = ''
-    // todo: abort
-    return
-  }
+  abort()
+  if (!newText) return
   if (debounceTimer) clearTimeout(debounceTimer)
   
   debounceTimer = setTimeout(() => {
     if (newText) {
-      // todo: abort
-      explain()
+      abortController.value = new AbortController()
+      explain(abortController.value.signal)
     }
   }, 800)
 })
 
-async function explain() {
-  session.value = await genSession({
-    initialPrompts,
-    // signal: abortController.signal,
-  })
-  console.log('session', session.value)
-
-  const stream = session.value.promptStreaming(selectedText.value, {
-    // signal: abortController.signal,
+async function explain(signal: AbortSignal) {
+  const stream = await session.value.promptStreaming(selectedText.value, {
+    signal,
   })
   for await (const chunk of stream) {
     explaination.value = (chunk)
   }
 }
 
+function abort() {
+  if (abortController.value) {
+    abortController.value.abort()
+  }
+  explaination.value = ''
+}
+
+async function clearInput() {
+  selectedText.value = ''
+}
+
 onMounted(async () => {
   // Listen for messages from the background script
   if (!chrome?.runtime) return
+
+  session.value = await genSession({
+    initialPrompts,
+  })
+
   chrome.runtime.onMessage.addListener((message) => {
     if (message.type === 'textSelected') {
       selectedText.value = message.text
@@ -73,9 +78,6 @@ onMounted(async () => {
   <div class="title text-lg font-bold dark:text-white mb-8">Left to select, right to explain</div>
   <!-- Source Text from user selection -->
   <Separator label="Source Text" class="mb-4" />
-  <!-- <div class="source-text text-sm dark:text-white max-h-[300px] overflow-y-auto mb-4">
-    {{ selectedText }}
-  </div> -->
   <div class="relative">
     <Textarea
       v-model="selectedText"
@@ -87,7 +89,7 @@ onMounted(async () => {
       class="absolute right-2 top-2"
       variant="outline"
       size="icon"
-      @click="selectedText = ''"
+      @click="clearInput"
     >
       <CircleX
         class="w-[12px] h-[12px] text-gray-500 dark:text-white"
