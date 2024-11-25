@@ -45,8 +45,10 @@ Aparecium is a browser extension that can explain words, phrases, or sentences, 
 - ✅ Output as markdown.
 - ✅ Translate output text into multiple languages.
 - ✅ Remember settings.
+- [ ] Read clipboard.
+- [ ] Recreate session.
 - [ ] Detail level.
-- [ ] Structured output.
+- [ ] Structured output (JSON data that contains explaination, similar words, pronunciation).
 - [ ] History list.
 - [ ] Share input and output text as an image.
 - [ ] Rate the explanation. (Necessary?)

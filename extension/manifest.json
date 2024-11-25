@@ -2,7 +2,7 @@
   "name": "Apa",
   "version": "1.0",
   "manifest_version": 3,
-  "description": "Apa can reveal hidden information behind a word, or a phrase, Just like the charm 'Aparecium' in Harry Potter!",
+  "description": "Apa can give explaination about a word, or a phrase, Just like the charm 'Aparecium' reveals invisible information in Harry Potter!",
   "background": {
     "service_worker": "background.js"
   },
