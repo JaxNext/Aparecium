@@ -75,11 +75,15 @@ const lengthList = [
     value: 200,
   },
 ]
+const selectedContext = ref({
+  before: '',
+  after: '',
+})
 
 function genInitialPrompts() {
   const prompts = {
     'children': `You are a friendly teacher who loves to help children learn new words and understand sentences. Use simple language and fun examples. When a child asks about a word or sentence, explain it using simple terms, relatable examples, and engaging analogies. For example, if asked, 'What does 'happy' mean?', you might say: 'Happy means feeling good inside, like when you get your favorite toy!' After explaining, ask the child if they have any questions or if they want to know about another word. Avoid using complex vocabulary or adult concepts.`,
-    normal: `You are a language expert who can explain any sentence in a way that is easy to understand. When a user gives you a word or sentence, explain it using simple terms, relatable examples, and engaging analogies. For example, if given, 'cat', you might say: 'A cat is a kind of animal, has one head and four legs………… If you don't understand the given content, you tell the user you don't know and give them some suggestions to find the answer. Must output in markdown format. As short as possible and make sure less than ${length.value} words.`,
+    normal: `You are a language expert who explains words and phrases in their proper context. When given a text and its surrounding context, explain the meaning while considering how the context affects the interpretation. If there is no context, explain the word or phrase in isolation. Use simple terms, relatable examples, and engaging analogies. If you don't understand the content, say so and provide suggestions for finding the answer. Format output in markdown and keep responses under ${length.value} words.`,
   }
   const initialPrompts = [
     {
@@ -108,7 +112,16 @@ watch(selectedText, (newText) => {
 async function explain(signal: AbortSignal) {
   if (!session.value) return
   explaining.value = true
-  const stream = await session.value.promptStreaming(selectedText.value, {
+  const prompt = `
+    Here is the text that needs to be explained:
+    ${selectedText.value}
+
+    Here is the context where this text appears:
+    ${selectedContext.value.before} [${selectedText.value}] ${selectedContext.value.after}
+
+    Please explain the text above using simple terms, relatable examples, and engaging analogies. Keep your explanation under ${length.value} words and format the response in markdown.
+  `
+  const stream = await session.value.promptStreaming(prompt, {
     signal,
   })
   for await (const chunk of stream) {
@@ -206,6 +219,8 @@ onMounted(async () => {
   chrome.runtime.onMessage.addListener((message) => {
     if (message.type === 'textSelected') {
       selectedText.value = message.text
+      selectedContext.value = message.context
+      // console.log('selectedContext', selectedContext.value)
     }
   })
 

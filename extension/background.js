@@ -19,12 +19,34 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
 // Function to inject into the page
 function injectSelectionListener() {
   document.addEventListener('selectionchange', () => {
-    const selectedText = window.getSelection()?.toString();
-    if (selectedText) {
-      chrome.runtime.sendMessage({ 
-        type: 'textSelected', 
-        text: selectedText 
-      });
-    }
+    const selection = window.getSelection();
+    if (!selection || !selection.toString()) return;
+    
+    const selectedText = selection.toString();
+    
+    // Get the containing element's text
+    const container = selection.anchorNode?.parentElement;
+    
+    const fullText = container?.textContent || '';
+    let beforeText = '';
+    let afterText = '';
+    if (fullText) {
+      const selectionStart = fullText?.indexOf?.(selectedText);
+      
+      if (selectionStart === -1) return;
+      
+      // Get words before and after
+      const halfLength = 20;
+      beforeText = fullText.slice(0, selectionStart).split(/\s+/).slice(-halfLength).join(' ');
+      afterText = fullText.slice(selectionStart + selectedText.length).split(/\s+/).slice(0, halfLength).join(' ');
+    };
+    chrome.runtime.sendMessage({ 
+      type: 'textSelected',
+      text: selectedText,
+      context: {
+        before: beforeText,
+        after: afterText
+      }
+    });
   });
 }
