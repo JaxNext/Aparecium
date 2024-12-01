@@ -24,5 +24,8 @@
       "128": "images/icon128.png"
     },
     "default_title": "Aparecium"
-  }
+  },
+  "trial_tokens": [
+    "AlxvCU7IVXDLt2qnFlsHvYHz1/4o8+VY4euZXWnYcCmRf59twAs9ZlsFnPy9e31AmpquOiUuRP+Dbb2C+sAVfQkAAAB4eyJvcmlnaW4iOiJjaHJvbWUtZXh0ZW5zaW9uOi8vbXBkam1lZmprZm9jY2lpY2NkZWFwaGFuZ2JlZGVmZ2IiLCJmZWF0dXJlIjoiQUlQcm9tcHRBUElGb3JFeHRlbnNpb24iLCJleHBpcnkiOjE3NjA0ODYzOTl9"
+  ]
 }

@@ -6,6 +6,8 @@ Now you have Apa, a browser extension that can explain words, phrases, or senten
 
 [![](./assets/apa.gif)]()
 
+Apa uses Chrome's built-in AI APIs, including `Prompt API`, `Language Detector API` and `Translator API`.
+
 > The name is a short for "Aparicium", which is a charm in Harry Potter. Aparicium can reveal hidden information on the parchment.
 
 ## Features
