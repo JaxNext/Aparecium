@@ -43,7 +43,7 @@ const copied = ref(false)
 const explaining = ref(false)
 const storage = useStorage('aparecium-settings', {
   translateTo: 'en',
-  len: 200,
+  len: 50,
 })
 const canTranslate = ref(false)
 const translateTo = ref(storage.value.translateTo)
@@ -80,6 +80,8 @@ const selectedContext = ref({
   after: '',
 })
 
+const isAutoDetect = ref(false)
+
 function genInitialPrompts() {
   const prompts = {
     'children': `You are a friendly teacher who loves to help children learn new words and understand sentences. Use simple language and fun examples. When a child asks about a word or sentence, explain it using simple terms, relatable examples, and engaging analogies. For example, if asked, 'What does 'happy' mean?', you might say: 'Happy means feeling good inside, like when you get your favorite toy!' After explaining, ask the child if they have any questions or if they want to know about another word. Avoid using complex vocabulary or adult concepts.`,
@@ -110,8 +112,35 @@ watch(selectedText, (newText) => {
 })
 
 async function explain(signal: AbortSignal) {
+  console.log('isAutoDetect', isAutoDetect.value);
+  if (!isAutoDetect.value) {
+    selectedContext.value = {
+      before: '',
+      after: '',
+    }
+  }
   if (!session.value) return
   explaining.value = true
+  // const prompt = `
+  //   Here is the text that needs to be explained:
+  //   ${selectedText.value}
+
+  //   Here is the context where this text appears:
+  //   <Context>
+  //   ${selectedContext.value.before} [${selectedText.value}] ${selectedContext.value.after}
+  //   </Context>
+
+  //   Please explain the text above using simple terms, relatable examples, and engaging analogies.
+
+  //   You will output as the following structure:
+  //   <Structure>
+  //     <Meaning>${!selectedContext.value.before && !selectedContext.value.after ? 'Explain the text in isolation.' : 'The specific meaning in the given context above.'}</Meaning>
+  //     <Synonyms>Up to 3 words that are similar in meaning to the text.</Synonyms>
+  //     <Example>A example to help understand the meaning.</Example>
+  //   </Structure>
+
+  //   Keep your explanation under ${length.value} words and format the response in markdown.
+  // `
   const prompt = `
     Here is the text that needs to be explained:
     ${selectedText.value}
@@ -218,9 +247,9 @@ onMounted(async () => {
 
   chrome.runtime.onMessage.addListener((message) => {
     if (message.type === 'textSelected') {
+      isAutoDetect.value = true
       selectedText.value = message.text
       selectedContext.value = message.context
-      // console.log('selectedContext', selectedContext.value)
     }
   })
 
@@ -237,7 +266,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="title text-2xl font-bold dark:text-white mb-2">🪄 Aparecium!</div>
+  <div class="title text-2xl font-bold mb-2 gradient-text">🪄 Aparecium!</div>
   <div class="desc text-sm font-thin dark:text-gray-400 mb-2">Select a word and read the explaination</div>
   <Separator class="mb-4" />
   <div class="title-row flex justify-between items-center mb-4">
@@ -251,7 +280,7 @@ onMounted(async () => {
         @click="clearInput"
       >
         <Trash2
-          class="w-[14px] h-[14px] text-red-500"
+          class="w-[14px] h-[14px] text-gray-400"
         />
       </Button>
     </div>
@@ -260,6 +289,8 @@ onMounted(async () => {
       v-model="selectedText"
       placeholder=""
       class="source-text pretty-scrollbar text-sm dark:text-white mb-4 whitespace-pre-line pr-[18px] h-[60px] resize-none overflow-y-auto"
+      @focus="isAutoDetect = false"
+      @blur="isAutoDetect = true"
     />
   <!-- Explaination -->
   <div class="title-row flex items-center mb-4">
@@ -338,7 +369,7 @@ onMounted(async () => {
         :title="copied ? 'Copied!' : 'Copy'"
         @click="copyExplaination"
       >
-        <Copy v-if="!copied" class="w-[14px] h-[14px] text-green-500" />
+        <Copy v-if="!copied" class="w-[14px] h-[14px] text-gray-400" />
         <CopyCheck v-else class="w-[14px] h-[14px] text-green-500" />
       </Button>
     </div>
@@ -403,5 +434,24 @@ onMounted(async () => {
   padding-left: 1em;
   margin-left: 0;
   margin-bottom: 1em;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #FF0080 0%, #7928CA 50%, #FF4D4D 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  text-shadow: 0 0 1px rgba(0,0,0,0.1);
+}
+
+/* Brighter gradient for dark mode */
+@media (prefers-color-scheme: dark) {
+  .gradient-text {
+    background: linear-gradient(135deg, #FF1493 0%, #9D4EDD 50%, #FF6B6B 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    filter: brightness(1.2) contrast(1.1);
+  }
 }
 </style>
