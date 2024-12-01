@@ -1,39 +1,47 @@
-# Aparecium
+# Apa
 
-Aparecium is a browser extension that can explain words, phrases, or sentences, inspired by the charm Aparecium from Harry Potter. This extension is designed to enhance your browsing experience by providing explanations for the text you encounter online.
+Have you ever encountered a word or phrase that you don't understand while reading a paper on arXiv or other websites? Usually you have to copy the text and search it on Google to find the meaning. It's annoying, isn't it?
+
+Now you have Apa, a browser extension that can explain words, phrases, or sentences.
+
+[![](./assets/apa.gif)]()
+
+> The name is a short for "Aparicium", which is a charm in Harry Potter. Aparicium can reveal hidden information on the parchment.
 
 ## Features
 
-[![](./assets/apa.gif)]()
+[![](./assets/ui.jpeg)]()
+
+- Automatically explains text upon selection
+- Understands meaning based on surrounding context
+- Adjustable explanation length: short, medium, long
+- Supports manual input and paste
+- Regenerate explanation if not satisfied
+- Copy explanation to clipboard
+- Translation between Chinese and English
+- Can interrupt/cancel operations
+- Light and dark themes
 
 ## Installation
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/yourusername/aparecium.git
    ```
-2. Navigate to the project directory:
-   ```bash
-   cd aparecium
-   ```
-3. Install dependencies:
-   ```bash
-   npm install
-   ```
-4. Build the extension:
-   ```bash
-   npm run build
-   ```
-5. Load the extension in your browser:
+
+2. Load the extension in your **Chrome Canary (latest version)**:
    - Open your browser's extensions page.
    - Enable "Developer mode".
    - Click "Load unpacked" and select the `extension` directory from the project.
 
 ## Usage
 
-1. Open the extension side panel.
-2. Highlight any text on a webpage, the selected text will be catch by Aparecium automatically.
-3. Now you can see the explanation of the selected text in the side panel.
+1. Download the [latest version of Chrome Canary](https://www.google.com/intl/en_ca/chrome/canary/).
+2. Enable experimental built-in AI APIs according to [the guides](https://docs.google.com/document/d/18otm-D9xhn_XyObbQrc1v7SI-7lBX3ynZkjEpiS1V04/edit?tab=t.0).
+3. Open the extension side panel.
+4. Highlight any text on a webpage, the selected text will be catch by Aparecium automatically.
+5. Now you can see the explanation of the selected text in the side panel.
 
 ## Roadmap
 
@@ -45,26 +53,38 @@ Aparecium is a browser extension that can explain words, phrases, or sentences, 
 - ✅ Output as markdown.
 - ✅ Translate output text into multiple languages.
 - ✅ Remember settings.
+- [ ] Structured output (JSON data that contains explaination, similar words, pronunciation).
 - [ ] Read clipboard.
 - [ ] Recreate session.
 - [ ] Detail level.
-- [ ] Structured output (JSON data that contains explaination, similar words, pronunciation).
 - [ ] History list.
 - [ ] Share input and output text as an image.
 - [ ] Rate the explanation. (Necessary?)
 - [ ] Pronunciation and TTS.
 
 ## Development
-
 ### Prerequisites
 
-- Node.js and npm installed on your machine.
+> Node.js and npm installed on your machine.
 
-### Scripts
 
-- `npm run dev`: Start the development server.
-- `npm run build`: Build the extension for production.
-- `npm run lint`: Lint the codebase.
+1. Navigate to the project directory:
+
+   ```bash
+   cd aparecium
+   ```
+2. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+3. Hot reload:
+
+   ```bash
+   npm run dev
+   npm run dev-ext
+   ```
+
 
 ### Configuration
 
