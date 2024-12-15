@@ -2,6 +2,7 @@
 import { onMounted, ref, watch } from 'vue'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
+import { Button } from "@/components/ui/button";
 import {
   genSession,
   checkTranslatorUsability,
@@ -242,17 +243,17 @@ async function changeLength(len: number) {
 
 onMounted(async () => {
   // Listen for messages from the background script
-  if (!chrome?.runtime) return
-  console.log('onMounted', storage.value.len, typeof storage.value.len)
+  if (chrome?.runtime) {
+    console.log('onMounted', storage.value.len, typeof storage.value.len)
 
-  chrome.runtime.onMessage.addListener((message) => {
-    if (message.type === 'textSelected') {
-      isAutoDetect.value = true
-      selectedText.value = message.text
-      selectedContext.value = message.context
-    }
-  })
-
+    chrome.runtime.onMessage.addListener((message) => {
+      if (message.type === 'textSelected') {
+        isAutoDetect.value = true
+        selectedText.value = message.text
+        selectedContext.value = message.context
+      }
+    })
+  }
   session.value = await genSession({
     initialPrompts: genInitialPrompts(),
   })

@@ -3,6 +3,7 @@
   "version": "1.0",
   "manifest_version": 3,
   "description": "Apa can give explaination about a word, or a phrase, Just like the charm 'Aparecium' reveals invisible information in Harry Potter!",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAv/9aPTQbSFvFjsg9yZh1zWqDuU/gL8szLrgycRKKN3f8CX/pOCSgE1lp1HIad96Dyyn2Hhzjd+J23+cXE3U5D3SYT0ZeQ19Rde8pKdlPKoBgG0nj+PaRngDMl0Q1HoCq7TAhenjaHsbkwmoberYZo8hYXO8zXvWnYz3E+DtjtK+8GFMXPnV0DlV+7JlgGaCz4jaz4geWN5yHsT5x5L3XY08fCqrbfXYipoEeFMTKtpgwywaf0YBBwreuF70zYtrVc80bZvt3A6WEkCHjly0RR0fAC0HxJuLtDVXdWF4pnvNYlHymUtae7ovB509FYByV/WQIYZurmWWOEvQzuo1oewIDAQAB",
   "background": {
     "service_worker": "background.js"
   },
@@ -12,7 +13,8 @@
   "permissions": [
     "sidePanel",
     "scripting",
-    "activeTab"
+    "activeTab",
+    "aiLanguageModelOriginTrial"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -26,6 +28,7 @@
     "default_title": "Aparecium"
   },
   "trial_tokens": [
-    "AlxvCU7IVXDLt2qnFlsHvYHz1/4o8+VY4euZXWnYcCmRf59twAs9ZlsFnPy9e31AmpquOiUuRP+Dbb2C+sAVfQkAAAB4eyJvcmlnaW4iOiJjaHJvbWUtZXh0ZW5zaW9uOi8vbXBkam1lZmprZm9jY2lpY2NkZWFwaGFuZ2JlZGVmZ2IiLCJmZWF0dXJlIjoiQUlQcm9tcHRBUElGb3JFeHRlbnNpb24iLCJleHBpcnkiOjE3NjA0ODYzOTl9"
+    "AlxvCU7IVXDLt2qnFlsHvYHz1/4o8+VY4euZXWnYcCmRf59twAs9ZlsFnPy9e31AmpquOiUuRP+Dbb2C+sAVfQkAAAB4eyJvcmlnaW4iOiJjaHJvbWUtZXh0ZW5zaW9uOi8vbXBkam1lZmprZm9jY2lpY2NkZWFwaGFuZ2JlZGVmZ2IiLCJmZWF0dXJlIjoiQUlQcm9tcHRBUElGb3JFeHRlbnNpb24iLCJleHBpcnkiOjE3NjA0ODYzOTl9",
+    "AlbuDwaoBCptvogmj0mmdGxK10OXmHYN/TqI/i1EZzv82/FNDpm3yh4rLLxXfvatkjAhSNupzB2jvT2le+X/3AkAAABveyJvcmlnaW4iOiJjaHJvbWUtZXh0ZW5zaW9uOi8vbXBkam1lZmprZm9jY2lpY2NkZWFwaGFuZ2JlZGVmZ2IiLCJmZWF0dXJlIjoiVHJhbnNsYXRpb25BUEkiLCJleHBpcnkiOjE3NTMxNDI0MDB9"
   ]
 }
