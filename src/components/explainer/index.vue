@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, ref, watch, computed } from 'vue'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from "@/components/ui/button";
@@ -82,6 +82,11 @@ const selectedContext = ref({
 })
 
 const isAutoDetect = ref(false)
+const chromeVersion = ref('')
+const chromeVersionFirst = computed(() => {
+  if (!chromeVersion.value) return ''
+  return chromeVersion.value.split('.')[0]
+})
 
 function genInitialPrompts() {
   const prompts = {
@@ -155,8 +160,12 @@ async function explain(signal: AbortSignal) {
     signal,
   })
   for await (const chunk of stream) {
-    explaination.value = chunk
-    parsedExplaination.value = marked(chunk)
+    if (chromeVersionFirst.value > '131') {
+      explaination.value += chunk
+    } else {
+      explaination.value = chunk
+    }
+    parsedExplaination.value = marked(explaination.value)
   }
   explaining.value = false
   await translate()
@@ -242,6 +251,7 @@ async function changeLength(len: number) {
 }
 
 onMounted(async () => {
+  getChromeVersion()
   // Listen for messages from the background script
   if (chrome?.runtime) {
     console.log('onMounted', storage.value.len, typeof storage.value.len)
@@ -264,6 +274,12 @@ onMounted(async () => {
   }))?.available ?? false
 
 })
+
+function getChromeVersion() {
+  const userAgent = navigator.userAgent;
+  const match = userAgent.match(/Chrome\/([0-9.]+)/);
+  chromeVersion.value = match ? match[1] : '';
+}
 </script>
 
 <template>
