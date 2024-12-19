@@ -55,9 +55,10 @@ Apa uses Chrome's built-in AI APIs, including `Prompt API`, `Language Detector A
 - ✅ Output as markdown.
 - ✅ Translate output text into multiple languages.
 - ✅ Remember settings.
+- [ ] Clone session when token limit is reached.
+- [ ] Better support for uncapability cases and model download progress.
 - [ ] Structured output (JSON data that contains explaination, similar words, pronunciation).
 - [ ] Read clipboard.
-- [ ] Recreate session.
 - [ ] Detail level.
 - [ ] History list.
 - [ ] Share input and output text as an image.
