@@ -118,7 +118,6 @@ watch(selectedText, (newText) => {
 })
 
 async function explain(signal: AbortSignal) {
-  console.log('isAutoDetect', isAutoDetect.value);
   if (!isAutoDetect.value) {
     selectedContext.value = {
       before: '',
@@ -291,7 +290,7 @@ function getChromeVersion() {
     <div class="btn-box">
       <Button
         v-if="selectedText"
-        class=""
+        class="w-[24px] h-[24px]"
         variant="outline"
         size="icon"
         @click="clearInput"
@@ -319,7 +318,7 @@ function getChromeVersion() {
     <div class="btn-box ml-auto">
       <Button
         v-if="selectedText"
-        class="mr-2"
+        class="mr-2 w-[24px] h-[24px]"
         variant="outline"
         size="icon"
         title="Redo"
@@ -330,7 +329,7 @@ function getChromeVersion() {
       <DropdownMenu v-if="canTranslate && explaination && !explaining">
         <DropdownMenuTrigger as-child>
           <Button
-            class="mr-2"
+            class="mr-2 w-[24px] h-[24px]"
             variant="outline"
             size="icon"
             title="Translate"
@@ -355,7 +354,7 @@ function getChromeVersion() {
       <DropdownMenu v-if="explaination && !explaining">
         <DropdownMenuTrigger as-child>
           <Button
-            class="mr-2"
+            class="mr-2 w-[24px] h-[24px]"
             variant="outline"
             size="icon"
             title="Length"
@@ -379,7 +378,7 @@ function getChromeVersion() {
       </DropdownMenu>
       <Button
         v-if="explaination && !explaining"
-        class=""
+        class="w-[24px] h-[24px]"
         variant="outline"
         size="icon"
         :disabled="copied"
