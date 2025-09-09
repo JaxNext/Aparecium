@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Button } from "@/components/ui/button";
 import {
   genSession,
-  checkTranslatorUsability,
+  checkTranslatorAvailability,
   genTranslator,
 } from '@rejax/browser-ai'
 import {
@@ -267,7 +267,7 @@ onMounted(async () => {
     initialPrompts: genInitialPrompts(),
   })
 
-  canTranslate.value = (await checkTranslatorUsability({
+  canTranslate.value = (await checkTranslatorAvailability({
     sourceLanguage: 'en',
     targetLanguage: 'zh',
   }))?.available ?? false

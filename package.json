@@ -11,7 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@rejax/browser-ai": "^0.0.12",
+    "@rejax/browser-ai": "^0.0.19",
     "@vueuse/core": "^11.3.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
