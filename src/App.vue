@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { checkPromptAvailability } from '@rejax/browser-ai'
+import { checkPromptAvailability, requestModelDownloadProgress } from '@rejax/browser-ai'
 import DarkMode from '@/components/DarkMode.vue'
 import NotSupportTip from '@/components/NotSupportTip.vue'
 import Explainer from '@/components/explainer/index.vue'
@@ -11,10 +11,16 @@ const msg = ref('')
 
 onMounted(async () => {
   const checkRes = await checkPromptAvailability()
-  const { available, message } = checkRes
+  console.log(checkRes)
+  const { available, loadingModel, message } = checkRes
   isSupport.value = available
   msg.value = message
   isReady.value = true
+  if (loadingModel) {
+    requestModelDownloadProgress((progress) => {
+      console.log(progress)
+    })
+  }
 })
 </script>
 
