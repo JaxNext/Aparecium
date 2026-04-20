@@ -16,6 +16,8 @@ import {
   RefreshCcw,
   Languages,
   Ruler,
+  Volume2,
+  VolumeX,
 } from 'lucide-vue-next'
 import {
   DropdownMenu,
@@ -80,6 +82,8 @@ const selectedContext = ref({
   before: '',
   after: '',
 })
+
+const speaking = ref(false)
 
 const isAutoDetect = ref(false)
 const chromeVersion = ref('')
@@ -172,6 +176,70 @@ async function explain(signal: AbortSignal) {
 function abort () {
   abortExplain()
   abortTranslate()
+  stopSpeech()
+}
+
+function stopSpeech() {
+  window.speechSynthesis.cancel()
+  speaking.value = false
+}
+
+function speak() {
+  if (speaking.value) {
+    stopSpeech()
+    return
+  }
+
+  const textToRead = translatedExplaination.value || explaination.value
+  if (!textToRead) return
+
+  // Strip HTML from textToRead
+  const tempDiv = document.createElement('div')
+  tempDiv.innerHTML = textToRead
+  const plainText = tempDiv.textContent || tempDiv.innerText || ''
+
+  const utterance = new SpeechSynthesisUtterance(plainText)
+  
+  // Set voice based on language
+  let voices = window.speechSynthesis.getVoices()
+  
+  if (voices.length === 0) {
+    // If voices aren't loaded yet, wait for them
+    window.speechSynthesis.onvoiceschanged = () => {
+      voices = window.speechSynthesis.getVoices()
+      startSpeaking(voices)
+      // Remove listener to avoid multi-triggering
+      window.speechSynthesis.onvoiceschanged = null
+    }
+  } else {
+    startSpeaking(voices)
+  }
+
+  function startSpeaking(voicesList: SpeechSynthesisVoice[]) {
+    // Determine if it's likely Chinese based on the text or current translation setting
+    const isChinese = translateTo.value === 'zh' || /[\u4e00-\u9fa5]/.test(plainText)
+    
+    if (isChinese) {
+      const zhVoice = voicesList.find(v => v.lang.includes('zh'))
+      if (zhVoice) utterance.voice = zhVoice
+      utterance.lang = 'zh-CN'
+    } else {
+      const enVoice = voicesList.find(v => v.lang.includes('en'))
+      if (enVoice) utterance.voice = enVoice
+      utterance.lang = 'en-US'
+    }
+
+    utterance.onend = () => {
+      speaking.value = false
+    }
+
+    utterance.onerror = () => {
+      speaking.value = false
+    }
+
+    speaking.value = true
+    window.speechSynthesis.speak(utterance)
+  }
 }
 function abortExplain() {
   if (explainController.value) {
@@ -315,7 +383,19 @@ function getChromeVersion() {
       <LoaderPinwheel class="w-[14px] h-[14px] text-gray-400 animate-spin" />
       <div class="status text-xs text-gray-500 ml-1">{{ explaining ? 'Explaining' : 'Translating' }}</div>
     </div>
-    <div class="btn-box ml-auto">
+    <div class="btn-box ml-auto flex items-center">
+      <Button
+        v-if="explaination && !explaining"
+        class="mr-2 w-[24px] h-[24px]"
+        variant="outline"
+        size="icon"
+        :title="speaking ? 'Stop' : 'Read Aloud'"
+        @click="speak"
+      >
+        <VolumeX v-if="speaking" class="w-[14px] h-[14px] text-red-400" />
+        <Volume2 v-else class="w-[14px] h-[14px] text-gray-400" />
+      </Button>
+      
       <Button
         v-if="selectedText"
         class="mr-2 w-[24px] h-[24px]"
